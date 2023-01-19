@@ -1,3 +1,4 @@
+import pygame as pg
 class Position:
     def __init__(self, x, y):
         self.x = x
@@ -14,7 +15,7 @@ class Cursor:
     pass
 
 
-class Label:
+class Label(pg.sprite.Sprite):
     def __init__(self, position, size, color, text):
         self.position = position
         self.size = size
@@ -23,7 +24,7 @@ class Label:
         pass
 
 
-class Button:
+class Button(pg.sprite.Sprite):
     def __init__(self, position, size, color, on_click, label=None):
         self.position = position
         self.size = size
@@ -32,17 +33,35 @@ class Button:
         self.on_click = on_click
 
 
-class GameObject:
-    pass
-
+class GameObject(pg.sprite.Sprite):
+    def __init__(self, position, size, *sprite_groups):
+        super().__init__(*sprite_groups)
+        self.position = position
+        self.size = size
 
 class Brick(GameObject):
-    pass
+    def __init__(self, position, size, health):
+        #super().__init__()
+        pass
 
 
 class Ball(GameObject):
-    pass
+    def __init__(self, position, size, velocity):
+        #super().__init__()
+        pass
 
 
 class Platform(GameObject):
-    pass
+    def __init__(self, position, size, time=None):   #время до исчезновения
+        #super().__init__()
+        self.time = time
+
+    def update(self):
+        pass
+
+class PlayerPlatform(Platform):
+    def __init__(self):
+        #super().__init__()
+        pass
+    def update(self):
+        pass
