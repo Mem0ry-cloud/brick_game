@@ -29,7 +29,7 @@ class Button:
         self.size = size
         self.color = color
         self.label = label
-        pass
+        self.on_click = on_click
 
 
 class GameObject:
