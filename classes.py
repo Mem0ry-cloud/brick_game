@@ -1,16 +1,4 @@
 import pygame as pg
-class Position:
-    def __init__(self, x, y):
-        self.x = x
-        self.y = y
-
-
-class Size:
-    def __init__(self, width, height):
-        self.width = width
-        self.height = height
-
-
 class Cursor:
     pass
 
@@ -25,14 +13,21 @@ class Label(pg.sprite.Sprite):
 
 
 class Button(pg.sprite.Sprite):
-    def __init__(self, position, size, color, on_click, label=None):
+    def __init__(self, groups, position, size, color, on_click, label="nothing", font=None, font_size=36, font_color=(180, 0, 0), label_pos=(310, 50)):
+        super().__init__(*groups)
         self.position = position
         self.size = size
         self.color = color
-        self.label = label
         self.on_click = on_click
-
-
+        #font
+        self.label = label
+        self.font = font
+        self.font_size = font_size
+        self.font_color = font_color
+        self.label_pos = label_pos
+    def get_blit(self):
+        return [(pg.font.Font(self.font, self.font_size).render(self.label, True, self.font_color)), (self.label_pos)]
+        #return (pg.font.Font(None, 36).render('Stones Game', True, (180, 0, 0)), (310, 50))
 class GameObject(pg.sprite.Sprite):
     def __init__(self, position, size, *sprite_groups):
         super().__init__(*sprite_groups)
