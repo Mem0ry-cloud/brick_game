@@ -13,10 +13,16 @@ class Label(pg.sprite.Sprite):
 
 
 class Button(pg.sprite.Sprite):
-    def __init__(self, groups, position, size, color, on_click, label="nothing", font=None, font_size=36, font_color=(180, 0, 0), label_pos=(310, 50)):
+    def __init__(self, groups, position, size, color, on_click, image="image", label="nothing", font=None, font_size=36, font_color=(180, 0, 0), label_pos=(310, 50)):
         super().__init__(*groups)
         self.position = position
         self.size = size
+
+        self.image = pg.transform.scale(image, size)
+        self.rect = self.image.get_rect()
+        self.mask = pg.mask.from_surface(self.image)
+        self.rect.x, self.rect.y = position
+
         self.color = color
         self.on_click = on_click
         #font
@@ -27,7 +33,11 @@ class Button(pg.sprite.Sprite):
         self.label_pos = label_pos
     def get_blit(self):
         return [(pg.font.Font(self.font, self.font_size).render(self.label, True, self.font_color)), (self.label_pos)]
-        #return (pg.font.Font(None, 36).render('Stones Game', True, (180, 0, 0)), (310, 50))
+
+    def update(self, args):
+        if self.rect.collidepoint(*list(args)):
+            self.on_click()
+
 class GameObject(pg.sprite.Sprite):
     def __init__(self, position, size, *sprite_groups):
         super().__init__(*sprite_groups)

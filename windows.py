@@ -1,5 +1,22 @@
 import classes
+import os
+import sys
 import pygame as pg
+
+def load_image(name, colorkey=None):
+    fullname = name
+    if not os.path.isfile(fullname):
+        print(f"Файл с изображением '{fullname}' не найден")
+        sys.exit()
+    image = pg.image.load(fullname)
+    if colorkey is not None:
+        image = image.convert()
+        if colorkey == -1:
+            colorkey = image.get_at((0, 0))
+        image.set_colorkey(colorkey)
+    else:
+        image = image.convert_alpha()
+    return image
 
 
 class Window:
@@ -14,6 +31,19 @@ class Window:
 class MainMenuWindow(Window):
     def __init__(self):
         super().__init__()
+        self.next_window = 1
+
+    def on_click_1(self):
+        self.next_window = -1
+        self.running = False
+
+    def on_click_2(self):
+        self.next_window = 3
+        self.running = False
+
+    def on_click_3(self):
+        self.next_window = 2
+        self.running = False
 
     def start(self):
         pg.init()
@@ -23,65 +53,36 @@ class MainMenuWindow(Window):
         ui = pg.sprite.Group()
         buttons = pg.sprite.Group()
         fonts = []
-        (classes.Button([buttons], (200, 70), 0, 0, 0, label="Играть", label_pos=(310, 100), font_color=(180, 180, 0), font_size=80))
-        (classes.Button([buttons], (200, 70), 0, 0, 0, label="Кампания", label_pos=(310, 250), font_color=(180, 180, 0), font_size=80))
-        (classes.Button([buttons], (200, 70), 0, 0, 0, label="Мастерская", label_pos=(310, 400), font_color=(180, 180, 0), font_size=80))
+        (classes.Button([buttons], (300, 100), (300, 100), 0, on_click=self.on_click_1, image=load_image("background.png"), label="Играть", label_pos=(310, 120), font_color=(180, 180, 0), font_size=80))
+        (classes.Button([buttons], (300, 250), (300, 100), 0, on_click=self.on_click_2, image=load_image("background.png"), label="Кампания", label_pos=(310, 270), font_color=(180, 180, 0), font_size=80))
+        (classes.Button([buttons], (300, 400), (350, 100), 0, on_click=self.on_click_3, image=load_image("background.png"), label="Мастерская", label_pos=(310, 420), font_color=(180, 180, 0), font_size=80))
+        #ещё переделаю это
         fonts.append((pg.font.Font(None, 50).render('Стонес Гаме', True, (180, 0, 0)), (310, 0)))
         fonts.append((pg.font.Font(None, 50).render('Сделано с божьей помощью', True, (90, 0, 0)), (200, 700)))
         def main():
-            running = True
+            self.running = True
             clock = pg.time.Clock()
-
             player = None
-            while running:
+            while self.running:
                 for event in pg.event.get():
                     if event.type == pg.QUIT:
-                        running = False
+                        self.running = False
                         break
+                    if event.type == pg.MOUSEBUTTONDOWN:
+                        buttons.update(event.pos)
                 screen.fill('white')
+                buttons.draw(screen)
                 [screen.blit(*i.get_blit()) for i in buttons]
                 [screen.blit(*i) for i in fonts]
                 ui.draw(screen)
                 pg.display.flip()
                 clock.tick(FPS)
         main()
-        return 1
+        return self.next_window
 
 
 class CampaignMenuWindow(Window):
-    def __init__(self):
-        super().__init__()
-
-    def start(self):
-        pg.init()
-        FPS = 50
-        SIZE = self.size.width, self.size.height
-        screen = pg.display.set_mode(SIZE)
-        ui = pg.sprite.Group()
-        buttons = pg.sprite.Group()
-        # classes.Button(classes.Position(0, 0), classes.Size(20, 20), )
-        fonts = []
-        fonts.append((pg.font.Font(None, 36).render('Stones Game', True, (180, 0, 0)), (310, 50)))
-        fonts.append((pg.font.Font(None, 36).render('Made by me', True, (90, 0, 0)), (355, 700)))
-
-        def main():
-            running = True
-            clock = pg.time.Clock()
-
-            player = None
-            while running:
-                for event in pg.event.get():
-                    if event.type == pg.QUIT:
-                        running = False
-                        break
-                screen.fill('white')
-                [screen.blit(*i) for i in fonts]
-                ui.draw(screen)
-                pg.display.flip()
-                clock.tick(FPS)
-            return -1
-
-        main()
+    pass
 
 
 class LevelsMenuWindow(Window):
@@ -126,7 +127,7 @@ class WindowMaster:
         return MainGameWindow().start()
 
     def start_LevelsMenuWindow(self):
-        return LevelsMenuWindow().start()
+        return LevelsMenuWindow().start()   #лвлы, созданные людьми, не нами(там будут появляться созданные карты)
 
     def start_CampaignMenuWindow(self, max_level=1):
         return CampaignMenuWindow().start()
