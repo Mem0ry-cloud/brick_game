@@ -13,12 +13,14 @@ class Label(pg.sprite.Sprite):
 
 
 class Button(pg.sprite.Sprite):
-    def __init__(self, groups, position, size, color, on_click, image="image", label="nothing", font=None, font_size=36, font_color=(180, 0, 0), label_pos=(310, 50)):
+    def __init__(self, groups, position, size, color, on_click, image="image", used_image="used_image", label="nothing", font=None, font_size=36, font_color=(180, 0, 0), label_pos=(310, 50)):
         super().__init__(*groups)
         self.position = position
         self.size = size
 
         self.image = pg.transform.scale(image, size)
+        self.default_image = self.image
+        self.used_image = pg.transform.scale(used_image, size)
         self.rect = self.image.get_rect()
         self.mask = pg.mask.from_surface(self.image)
         self.rect.x, self.rect.y = position
@@ -34,9 +36,18 @@ class Button(pg.sprite.Sprite):
     def get_blit(self):
         return [(pg.font.Font(self.font, self.font_size).render(self.label, True, self.font_color)), (self.label_pos)]
 
-    def update(self, args):
-        if self.rect.collidepoint(*list(args)):
-            self.on_click()
+    def update(self, args, used=False):
+        if used:
+            if self.rect.collidepoint(*list(args)):
+                self.image = self.used_image
+            else:
+                self.image = self.default_image
+            self.rect = self.image.get_rect()
+            self.mask = pg.mask.from_surface(self.image)
+            self.rect.x, self.rect.y = self.position
+        else:
+            if self.rect.collidepoint(*list(args)):
+                self.on_click()
 
 class GameObject(pg.sprite.Sprite):
     def __init__(self, position, size, *sprite_groups):

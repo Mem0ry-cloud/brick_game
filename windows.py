@@ -53,9 +53,9 @@ class MainMenuWindow(Window):
         ui = pg.sprite.Group()
         buttons = pg.sprite.Group()
         fonts = []
-        (classes.Button([buttons], (300, 100), (300, 100), 0, on_click=self.on_click_1, image=load_image("background.png"), label="Играть", label_pos=(310, 120), font_color=(180, 180, 0), font_size=80))
-        (classes.Button([buttons], (300, 250), (300, 100), 0, on_click=self.on_click_2, image=load_image("background.png"), label="Кампания", label_pos=(310, 270), font_color=(180, 180, 0), font_size=80))
-        (classes.Button([buttons], (300, 400), (350, 100), 0, on_click=self.on_click_3, image=load_image("background.png"), label="Мастерская", label_pos=(310, 420), font_color=(180, 180, 0), font_size=80))
+        (classes.Button([buttons], (300, 100), (300, 100), 0, on_click=self.on_click_1, image=load_image("background.png"), used_image=load_image("background_used.png"), label="Играть", label_pos=(310, 120), font_color=(180, 180, 0), font_size=80))
+        (classes.Button([buttons], (300, 250), (300, 100), 0, on_click=self.on_click_2, image=load_image("background.png"), used_image=load_image("background_used.png"), label="Кампания", label_pos=(310, 270), font_color=(180, 180, 0), font_size=80))
+        (classes.Button([buttons], (300, 400), (350, 100), 0, on_click=self.on_click_3, image=load_image("background.png"), used_image=load_image("background_used.png"), label="Мастерская", label_pos=(310, 420), font_color=(180, 180, 0), font_size=80))
         #ещё переделаю это
         fonts.append((pg.font.Font(None, 50).render('Стонес Гаме', True, (180, 0, 0)), (310, 0)))
         fonts.append((pg.font.Font(None, 50).render('Сделано с божьей помощью', True, (90, 0, 0)), (200, 700)))
@@ -70,6 +70,7 @@ class MainMenuWindow(Window):
                         break
                     if event.type == pg.MOUSEBUTTONDOWN:
                         buttons.update(event.pos)
+                buttons.update(pg.mouse.get_pos(), True)
                 screen.fill('white')
                 buttons.draw(screen)
                 [screen.blit(*i.get_blit()) for i in buttons]
@@ -82,7 +83,75 @@ class MainMenuWindow(Window):
 
 
 class CampaignMenuWindow(Window):
-    pass
+    def __init__(self):
+        super().__init__()
+        self.next_window = 1
+
+    def on_click_1(self):
+        self.next_window = -1
+        self.running = False
+
+    def on_click_2(self):
+        self.next_window = 3
+        self.running = False
+
+    def go_back(self):
+        self.next_window = 0
+        self.running = False
+
+    def start(self):
+        pg.init()
+        FPS = 50
+        SIZE = self.size
+        screen = pg.display.set_mode(SIZE)
+        ui = pg.sprite.Group()
+        buttons = pg.sprite.Group()
+        fonts = []
+        (classes.Button([buttons], (100, 100), (70, 70), 0, on_click=self.on_click_1,
+                        image=load_image("background.png"), used_image=load_image("background_used.png"),
+                        label="1", label_pos=(115, 115), font_color=(180, 180, 0), font_size=80))
+        (classes.Button([buttons], (200, 100), (70, 70), 0, on_click=self.on_click_1,
+                        image=load_image("background.png"), used_image=load_image("background_used.png"),
+                        label="2", label_pos=(215, 115), font_color=(180, 180, 0), font_size=80))
+        (classes.Button([buttons], (300, 100), (70, 70), 0, on_click=self.on_click_1,
+                        image=load_image("background.png"), used_image=load_image("background_used.png"),
+                        label="3", label_pos=(315, 115), font_color=(180, 180, 0), font_size=80))
+        (classes.Button([buttons], (400, 100), (70, 70), 0, on_click=self.on_click_1,
+                        image=load_image("background.png"), used_image=load_image("background_used.png"),
+                        label="4", label_pos=(415, 115), font_color=(180, 180, 0), font_size=80))
+        (classes.Button([buttons], (500, 100), (70, 70), 0, on_click=self.on_click_1,
+                        image=load_image("background.png"), used_image=load_image("background_used.png"),
+                        label="5", label_pos=(515, 115), font_color=(180, 180, 0), font_size=80))
+        (classes.Button([buttons], (600, 100), (70, 70), 0, on_click=self.on_click_1,
+                        image=load_image("background.png"), used_image=load_image("background_used.png"),
+                        label="6", label_pos=(615, 115), font_color=(180, 180, 0), font_size=80))
+        (classes.Button([buttons], (400, 600), (270, 70), 0, on_click=self.go_back,
+                        image=load_image("background.png"), used_image=load_image("background_used.png"),
+                        label="назад", label_pos=(415, 615), font_color=(180, 180, 0), font_size=80))
+        # ещё переделаю это
+        fonts.append((pg.font.Font(None, 50).render('Выбор уровня', True, (180, 0, 0)), (310, 0)))
+        def main():
+            self.running = True
+            clock = pg.time.Clock()
+            player = None
+            while self.running:
+                for event in pg.event.get():
+                    if event.type == pg.QUIT:
+                        self.running = False
+                        break
+                    if event.type == pg.MOUSEBUTTONDOWN:
+                        buttons.update(event.pos)
+                buttons.update(pg.mouse.get_pos(), True)
+                screen.fill('white')
+                buttons.draw(screen)
+                [screen.blit(*i.get_blit()) for i in buttons]
+                [screen.blit(*i) for i in fonts]
+                ui.draw(screen)
+                pg.display.flip()
+                clock.tick(FPS)
+
+        main()
+        return self.next_window
 
 
 class LevelsMenuWindow(Window):
@@ -112,7 +181,7 @@ class WindowMaster:
         elif self.level == 1:
             self.level = self.start_CreateMapWindow()
         elif self.level == 2:
-            self.level =self.start_LevelsMenuWindow()
+            self.level = self.start_LevelsMenuWindow()
         elif self.level == 3:
             self.level = self.start_CampaignMenuWindow()
         self.start_Window(self.level)
