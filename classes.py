@@ -1,7 +1,22 @@
 import pygame as pg
-class Cursor:
-    pass
+import sqlite3
 
+
+class Cursor:
+    def __init__(self):
+        self.connection = sqlite3.connect("brick_game_maps.db")
+    def add_info(self, info):
+        pass
+
+    def get_info(self, type_info, name):
+        if type_info == 'all':
+            request = f'SELECT map_name, key, creater FROM maps WHERE map_name = "{name}"'
+        elif type_info == 'key':
+            request = f'SELECT key FROM maps WHERE map_name = "{name}"'
+        elif type_info == 'creater':
+            request = f'SELECT creater FROM maps WHERE map_name = "{name}"'
+        res = self.connection.cursor().execute(request).fetchall()
+        return res
 
 class Label(pg.sprite.Sprite):
     def __init__(self, position, size, color, text):
