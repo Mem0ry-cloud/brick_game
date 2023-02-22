@@ -2,7 +2,7 @@ import classes
 import os
 import sys
 import pygame as pg
-
+import MapMaker
 
 def load_image(name, colorkey=None):
     fullname = name
@@ -234,7 +234,7 @@ class MainGameWindow(Window):
 
 
 class CreateMapWindow(Window):
-    pass
+    MapMaker.Start()
 
 
 class SkinsMenu(Window):

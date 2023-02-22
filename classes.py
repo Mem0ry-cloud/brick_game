@@ -9,6 +9,20 @@ class Cursor:
     def add_info(self, info):
         pass
 
+    def add_map(self, map_name, uncoded_map):
+        file = open(map_name, mode='w')
+        sym = ["0", "@", "*", "#", '&', '^', '%', '!', '/', '<', '>', '?']
+        blocks = [0, -1, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+        coded_map = ''
+        for i in uncoded_map:
+            symbol_index = blocks.index(i)
+            coded_map += sym[symbol_index]
+        file.write(coded_map)
+        request = f'INSERT INTO maps(map_name, key' \
+                  f'VALUES("{map_name}", "map\{map_name}.txt")'
+        self.connection.cursor().execute(request)
+        self.connection.commit()
+
     def get_info(self, type_info='all', name_file='test'):
         if type_info == 'all':
             request = f'SELECT map_name, key, creater FROM maps WHERE map_name = "{name_file}"'
