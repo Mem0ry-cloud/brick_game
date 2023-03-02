@@ -203,6 +203,7 @@ class LevelsMenuWindow(Window):
         super().__init__()
 
     def on_click_1(self):
+        self.next_window = 1
         self.running = False
 
     def go_back(self):
