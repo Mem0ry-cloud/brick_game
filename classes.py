@@ -1,5 +1,128 @@
 import pygame as pg
 import sqlite3
+import random
+
+class Brick(pg.sprite.Sprite):
+    def __init__(self, position, size, image="image", health=1, color=(255, 255, 255), on_collide=print):
+        super().__init__()
+        self.position = position
+        self.size = size
+        self.image = pg.transform.scale(image, size)
+        self.rect = self.image.get_rect()
+        self.mask = pg.mask.from_surface(self.image)
+        self.rect.x, self.rect.y = position
+        self.health = health
+        self.color = color
+        self.on_collide = on_collide
+        colorImage = pg.Surface(self.image.get_size()).convert_alpha()
+        colorImage.fill(self.color)
+        self.image.blit(colorImage, (0, 0), special_flags=pg.BLEND_RGBA_MULT)
+
+    def update(self):
+        self.health -= 1
+        if self.health == 0:
+            if self.on_collide != print:
+                self.on_collide(self.rect.x, self.rect.y)
+            self.kill()
+
+
+class Box(pg.sprite.Sprite):
+    def __init__(self, groups, position, size, image="image", speed=1, on_collide=print):
+        super().__init__(*groups)
+        self.position = position
+        self.size = size
+        self.image = pg.transform.scale(image, size)
+        self.rect = self.image.get_rect()
+        self.mask = pg.mask.from_surface(self.image)
+        self.rect.x, self.rect.y = position
+        self.speed = speed
+        self.on_collide = on_collide
+
+    def update(self, args=False):
+        if args == True:
+            if self.on_collide != print:
+                self.on_collide()
+            self.kill()
+            return
+        self.rect.y += self.speed
+
+
+class Ball(pg.sprite.Sprite):
+    def __init__(self, groups, position, vector=(1, 1), size=(5, 5), image="image"):
+        super().__init__(*groups)
+        self.size = size
+        self.vector = vector
+        self.image = pg.transform.scale(image, size)
+        self.rect = self.image.get_rect()
+        self.mask = pg.mask.from_surface(self.image)
+        self.rect.x, self.rect.y = position
+
+    def update(self, args):
+        if len(args) == 0:
+            x, y = self.vector
+            self.rect.x += x
+            self.rect.y += y
+        else:
+            x, y = self.vector
+            x1, y1 = args
+            x *= x1
+            if x == 0:
+                x = -1
+            y *= y1
+            if y == 0:
+                y = -1
+            self.vector = x, y
+
+
+class Map(pg.sprite.Sprite):
+    def __init__(self, groups, position, size, mapping, brick_image="brick_image", on_collide=print, box_chance=100):
+        super().__init__(*groups)
+        self.position = position
+        self.size = size
+        self.mapping = mapping
+        self.brick_image = brick_image
+        self.bricks = pg.sprite.Group()
+        self.on_collide = on_collide
+        self.box_chance = box_chance
+
+        for i in range(50):
+            for j in range(50):
+                curr = self.mapping[i * 50 + j]
+                if curr[0] != 0:
+                    x, y = position
+                    xs, ys = size
+                    if on_collide != print and random.randint(0, 100) <= box_chance:
+                        self.bricks.add(Brick((x + j * (xs + 1), y + i * (ys + 1)), size, brick_image, *curr, on_collide=on_collide))
+                    else:
+                        self.bricks.add(Brick((x + j * (xs + 1), y + i * (ys + 1)), size, brick_image, *curr))
+
+    def draw_all(self, screen):
+        self.bricks.draw(screen)
+
+    def update_all(self, args):
+        self.bricks.update()
+
+
+class Platform(pg.sprite.Sprite):
+    def __init__(self, groups, position, size, image="image", speed=5, max_speed=10):
+        super().__init__(*groups)
+        self.size = size
+        self.image = pg.transform.scale(image, size)
+        self.rect = self.image.get_rect()
+        self.mask = pg.mask.from_surface(self.image)
+        self.rect.x, self.rect.y = position
+        self.speed = speed
+        self.curr_arg = 0
+        self.curr_speed = speed
+        self.max_speed = max_speed
+
+    def update(self, args):
+        if args != self.curr_arg:
+            self.curr_arg = args
+            self.curr_speed = self.speed
+        else:
+            self.curr_speed = min(self.curr_speed + 0.8, self.max_speed)
+        self.rect.x += int(args * self.curr_speed)
 
 
 class Cursor:
@@ -51,46 +174,38 @@ class Cursor:
         return map_uncoded
 
 
-class Label(pg.sprite.Sprite):
-    def __init__(self, position, size, color, text):
-        self.position = position
-        self.size = size
-        self.color = color
-        self.text = text
-        pass
-
-
-block = [(0, 0), (1, 1)]
-
-
 class Button(pg.sprite.Sprite):
-    def __init__(self, groups, position, size, color, on_click, image="image", used_image="used_image", label="nothing",
+    def __init__(self, groups, position, size, color=(255, 255, 255), on_click=print, image="image", used_image=None, label="nothing",
                  font=None, font_size=36, font_color=(180, 0, 0), label_pos=(310, 50)):
         super().__init__(*groups)
-        self.position = position
-        self.size = size
+        self.position = position #позиция image
+        self.size = size #size image
 
         self.image = pg.transform.scale(image, size)
-        self.default_image = self.image
-        self.used_image = pg.transform.scale(used_image, size)
+        self.default_image = self.image #начальная image
+        self.used_image = self.default_image #image когда на кнопку навели
+        if used_image is not None:
+            self.used_image = pg.transform.scale(used_image, size)
         self.rect = self.image.get_rect()
         self.mask = pg.mask.from_surface(self.image)
         self.rect.x, self.rect.y = position
-
-        self.color = color
+        self.color = color #цвет image
+        colorImage = pg.Surface(self.image.get_size()).convert_alpha()
+        colorImage.fill(color)
+        self.image.blit(colorImage, (0, 0), special_flags=pg.BLEND_RGBA_MULT)
         self.on_click = on_click
-        # font
+        # font, текст
         self.label = label
         self.font = font
         self.font_size = font_size
         self.font_color = font_color
         self.label_pos = label_pos
 
-    def get_blit(self):
+    def get_blit(self): #нужен для рендера текста в окне
         return [(pg.font.Font(self.font, self.font_size).render(self.label, True, self.font_color)), (self.label_pos)]
 
-    def update(self, args, used=False):
-        if used:
+    def update(self, args, is_not_click=False):
+        if is_not_click: #used
             if self.rect.collidepoint(*list(args)):
                 self.image = self.used_image
             else:
@@ -99,42 +214,5 @@ class Button(pg.sprite.Sprite):
             self.mask = pg.mask.from_surface(self.image)
             self.rect.x, self.rect.y = self.position
         else:
-            if self.rect.collidepoint(*list(args)):
+            if self.rect.collidepoint(*list(args)) and self.on_click is not print:
                 self.on_click()
-
-
-class GameObject(pg.sprite.Sprite):
-    def __init__(self, position, size, *sprite_groups):
-        super().__init__(*sprite_groups)
-        self.position = position
-        self.size = size
-
-
-class Brick(GameObject):
-    def __init__(self, position, size, health):
-        # super().__init__()
-        pass
-
-
-class Ball(GameObject):
-    def __init__(self, position, size, velocity):
-        # super().__init__()
-        pass
-
-
-class Platform(GameObject):
-    def __init__(self, position, size, time=None):  # время до исчезновения
-        # super().__init__()
-        self.time = time
-
-    def update(self):
-        pass
-
-
-class PlayerPlatform(Platform):
-    def __init__(self):
-        # super().__init__()
-        pass
-
-    def update(self):
-        pass

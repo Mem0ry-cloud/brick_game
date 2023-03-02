@@ -3,10 +3,24 @@ from PyQt5.QtWidgets import QWidget, QApplication
 from PyQt5.QtWidgets import QInputDialog
 import sys
 import classes
+import os
 FPS = 144
 SIZE = WIDTH, HEIGHT = 753, 900
 
-
+def load_image(name, colorkey=None):
+    fullname = name
+    if not os.path.isfile(fullname):
+        print(f"Файл с изображением '{fullname}' не найден")
+        sys.exit()
+    image = pygame.image.load(fullname)
+    if colorkey is not None:
+        image = image.convert()
+        if colorkey == -1:
+            colorkey = image.get_at((0, 0))
+        image.set_colorkey(colorkey)
+    else:
+        image = image.convert_alpha()
+    return image
 class MapMaker:
     def __init__(self, width=50, height=50):
         self.width = width
@@ -151,7 +165,8 @@ class Save_window(QWidget):
                                                 "Введате название карты")
         if ok_pressed and name != '':
             return name
-
+def go_back():
+    print("на кнопку нажали!")
 def Start():
     pygame.display.set_caption('Клетчатое поле')
 
@@ -161,6 +176,10 @@ def Start():
     running = True
 
     field = MapMaker()
+    buttons = pygame.sprite.Group()
+    (classes.Button([buttons], (550, 720), (200, 70), on_click=go_back,
+                    image=load_image("background.png"), used_image=load_image("background_used.png"),
+                    label="назад", label_pos=(565, 735), font_color=(180, 180, 0), font_size=80))
     # field.set_view(1, 1, 8)
     while running:
         screen.fill((14, 227, 216))
@@ -171,15 +190,13 @@ def Start():
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if event.button == 1:
                     field.get_click(event.pos)
+                buttons.update(event.pos)
             if event.type == pygame.KEYDOWN:
                 if pygame.key.get_pressed()[pygame.K_LCTRL] and pygame.key.get_pressed()[pygame.K_s]:
                     field.save_map()
+        buttons.update(pygame.mouse.get_pos(), True)
+        buttons.draw(screen)
+        [screen.blit(*i.get_blit()) for i in buttons]
         field.render(screen)
         pygame.display.flip()
         clock.tick(FPS)
-
-
-#if __name__ == '__main__':
-pygame.init()
-Start()
-pygame.quit()
