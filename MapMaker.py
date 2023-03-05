@@ -3,32 +3,20 @@ from PyQt5.QtWidgets import QWidget, QApplication
 from PyQt5.QtWidgets import QInputDialog
 import sys
 import classes
-import os
+
+# import windows
 FPS = 144
 SIZE = WIDTH, HEIGHT = 753, 900
 
-def load_image(name, colorkey=None):
-    fullname = name
-    if not os.path.isfile(fullname):
-        print(f"Файл с изображением '{fullname}' не найден")
-        sys.exit()
-    image = pygame.image.load(fullname)
-    if colorkey is not None:
-        image = image.convert()
-        if colorkey == -1:
-            colorkey = image.get_at((0, 0))
-        image.set_colorkey(colorkey)
-    else:
-        image = image.convert_alpha()
-    return image
-class MapMaker:
+
+class MapMaker1:
     def __init__(self, width=50, height=50):
         self.width = width
         self.height = height
         self.field = []
         for i in range(height):
-            self.field.append([[0, 0] for i in range(width) ])
-        #print((self.field[0]))
+            self.field.append([[0, 0] for i in range(width)])
+        #print((self.field))
         self.left = 1
         self.top = 1
         self.cell_size = 15
@@ -111,13 +99,13 @@ class MapMaker:
 
         if my <= self.top or my >= height_p:
             return
-        #print('кор', self.pixels_to_row_and_column(mx, my))
+        # print('кор', self.pixels_to_row_and_column(mx, my))
         return self.pixels_to_row_and_column(mx, my)
 
     def on_click(self, cell):
         row, column = cell
         value = self.field[row][column][0]
-        #print(self.field[row][column])
+        # print(self.field[row][column])
         if value == 0:
             self.field[row][column][0] = 1
         elif value == 1:
@@ -144,17 +132,56 @@ class MapMaker:
             self.field[row][column][0] = 0
         else:
             raise Exception("В поле хранится не 0 или 1")
-        #print(self.field[row][column])
+        # print(self.field[row][column])
+
     def save_map(self):
         app = QApplication(sys.argv)
         save = Save_window()
         map_name = save.run()
-        map = []
-        for i in self.field:
-            for j in i:
-                map.append(j[0])
-        classes.Cursor.add_map(map_name, map)
+        if map_name is not False:
+            map = []
+            for i in self.field:
+                for j in i:
+                    map.append(j[0])
+            classes.Cursor.add_map(map_name, map)
 
+    def reform_map(self):
+        app = QApplication(sys.argv)
+        reform = Reform_window()
+        map = reform.run()
+        if map is not False:
+            self.field = []
+            for i in range(50):
+                self.field.append([[] for i in range(50)])
+            symbol = 0
+            for row in range(50):
+                for colm in range(50):
+                    sym = map[symbol][0]
+                    if sym == -1:
+                        self.field[row][colm] = [-1, 0]
+                    elif sym == 0:
+                        self.field[row][colm] = [0, 0]
+                    elif sym == 1:
+                        self.field[row][colm] = [1, 0]
+                    elif sym == 2:
+                        self.field[row][colm] = [2, 0]
+                    elif sym == 3:
+                        self.field[row][colm] = [3, 0]
+                    elif sym == 4:
+                        self.field[row][colm] = [4, 0]
+                    elif sym == 5:
+                        self.field[row][colm] = [5, 0]
+                    elif sym == 6:
+                        self.field[row][colm] = [6, 0]
+                    elif sym == 7:
+                        self.field[row][colm] = [7, 0]
+                    elif sym == 8:
+                        self.field[row][colm] = [8, 0]
+                    elif sym == 9:
+                        self.field[row][colm] = [9, 0]
+                    elif sym == 10:
+                        self.field[row][colm] = [10, 0]
+                    symbol += 1
 
 class Save_window(QWidget):
     def __init__(self):
@@ -165,21 +192,35 @@ class Save_window(QWidget):
                                                 "Введате название карты")
         if ok_pressed and name != '':
             return name
-def go_back():
-    print("на кнопку нажали!")
+        else:
+            return False
+
+
+class Reform_window(QWidget):
+    def __init__(self):
+        super().__init__()
+
+    def run(self):
+        name, ok_pressed = QInputDialog.getText(self, "Редактирование карты",
+                                                "Введате название карты")
+        if ok_pressed and name != '':
+            get_map = classes.Cursor()
+            map = get_map.get_map(name)
+            return map
+        else:
+            return False
+
+
 def Start():
-    pygame.display.set_caption('Клетчатое поле')
+    pygame.init()
+    pygame.display.set_caption('Map Maker')
 
     screen = pygame.display.set_mode(SIZE)
 
     clock = pygame.time.Clock()
     running = True
 
-    field = MapMaker()
-    buttons = pygame.sprite.Group()
-    (classes.Button([buttons], (550, 720), (200, 70), on_click=go_back,
-                    image=load_image("background.png"), used_image=load_image("background_used.png"),
-                    label="назад", label_pos=(565, 735), font_color=(180, 180, 0), font_size=80))
+    field = MapMaker1()
     # field.set_view(1, 1, 8)
     while running:
         screen.fill((14, 227, 216))
@@ -190,13 +231,18 @@ def Start():
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if event.button == 1:
                     field.get_click(event.pos)
-                buttons.update(event.pos)
             if event.type == pygame.KEYDOWN:
                 if pygame.key.get_pressed()[pygame.K_LCTRL] and pygame.key.get_pressed()[pygame.K_s]:
                     field.save_map()
-        buttons.update(pygame.mouse.get_pos(), True)
-        buttons.draw(screen)
-        [screen.blit(*i.get_blit()) for i in buttons]
+                if pygame.key.get_pressed()[pygame.K_LCTRL] and pygame.key.get_pressed()[pygame.K_r]:
+                    field.reform_map()
         field.render(screen)
         pygame.display.flip()
         clock.tick(FPS)
+    #pygame.quit()
+
+
+# if __name__ == '__main__':
+#pygame.init()
+#Start()
+#pygame.quit()
