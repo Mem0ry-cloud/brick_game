@@ -159,18 +159,26 @@ class Cursor:
             res = self.connection.cursor().execute(request).fetchall()
         return res
 
-    def get_map(self, map_name, form='list'):
+    def get_map(self, map_name, form="int"):
         sym = ["0", "@", "*", "#", '&', '^', '%', '!', '/', '<', '>', '?']
         format_sym = [[0, (255, 255, 255)], [-1, (0, 0, 0)], [1, (255, 0, 0)], [2, (255, 165, 0)], [3, (255, 255, 0)],
                       [4, (255, 255, 153)], [5, (0, 128, 0)], [6, (8, 189, 255)], [7, (8, 82, 255)], [8, (8, 99, 255)],
                       [9, (0, 0, 255)], [10, (102, 11, 186)]]
+        format_sym_str = [['0', (255, 255, 255)], ['-1', (0, 0, 0)], ['1', (255, 0, 0)], ['2', (255, 165, 0)],
+                          ['3', (255, 255, 0)], ['4', (255, 255, 153)], ['5', (0, 128, 0)], ['6', (8, 189, 255)],
+                          ['7', (8, 82, 255)], ['8', (8, 99, 255)], ['9', (0, 0, 255)], ['10', (102, 11, 186)]]
         map_key = self.get_info("key", map_name)
         map_file = open(map_key, encoding='utf8')
         map_coded = map_file.read()
         map_uncoded = []
-        for i in map_coded:
-            symbol_index = sym.index(i)
-            map_uncoded.append(format_sym[symbol_index])
+        if form == 'int':
+            for i in map_coded:
+                symbol_index = sym.index(i)
+                map_uncoded.append(format_sym[symbol_index])
+        elif form == 'str':
+            for i in map_coded:
+                symbol_index = sym.index(i)
+                map_uncoded.append(format_sym_str[symbol_index])
         return map_uncoded
 
 

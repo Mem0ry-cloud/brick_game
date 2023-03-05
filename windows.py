@@ -429,10 +429,8 @@ class MainGameWindow(Window):
         return self.next_window
 
 
-class CreateMapWindow(Window):
-    def start(self):
-        MapMaker.Start()
-
+def CreateMapWindow():
+    MapMaker.Start()
 
 class SkinsMenu(Window):
     def __init__(self):
